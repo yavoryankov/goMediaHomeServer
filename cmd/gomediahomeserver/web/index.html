@@ -235,7 +235,7 @@ render();
   const icon = type => `<span class="fileicon ${type}"><svg class="ico"><use href="#i-${type === 'folder' ? 'folder' : type === 'document' ? 'doc' : type}"/></svg></span>`;
   const bytes = n => n < 1024 ? `${n} B` : n < 1048576 ? `${(n/1024).toFixed(1)} KB` : n < 1073741824 ? `${(n/1048576).toFixed(1)} MB` : `${(n/1073741824).toFixed(2)} GB`;
   const date = value => new Date(value).toLocaleDateString('en-US');
-  let items = [], current = '', query = '', filter = 'all', sort = 'name', view = 'list';
+  let items = [], current = '', query = '', activeTag = '', filter = 'all', sort = 'name', view = 'list';
 
   async function get(path) { const r = await fetch('/api/v1/files?path=' + encodeURIComponent(path)); const data = await r.json(); if (!r.ok) throw new Error(data.error || 'Loading failed'); return data.items || []; }
   async function scan(path = '') { const rows = await get(path); let result = rows.map(x => ({...x, type: kind(x)})); for (const folder of rows.filter(x => x.is_dir)) result = result.concat(await scan(folder.path)); return result; }
@@ -245,6 +245,7 @@ render();
   function pathLinks(path) { return path.split('/').map((part, index, parts) => `<button class="path-link" data-real-path="${esc(parts.slice(0, index + 1).join('/'))}">${esc(part)}</button>`).join('<span class="path-sep">/</span>'); }
   function visible() {
     let result = query ? items.filter(x => `${x.name} ${x.path} ${x.keywords || ''}`.toLocaleLowerCase('bg-BG').includes(query.toLocaleLowerCase('bg-BG'))) : items.filter(x => parentOf(x.path) === current);
+    if (activeTag) result = result.filter(x => tagsOf(x).some(tag => tag.toLowerCase() === activeTag.toLowerCase()));
     if (filter !== 'all') result = result.filter(x => x.type === filter);
     return result.sort((a,b) => sort === 'size' ? b.size - a.size : sort === 'date' ? String(b.modified).localeCompare(String(a.modified)) : sort === 'type' ? a.type.localeCompare(b.type) : a.name.localeCompare(b.name, 'bg'));
   }
@@ -275,7 +276,7 @@ render();
   function replace(id) { const node = $('#' + id); if (!node) return null; const copy = node.cloneNode(true); node.replaceWith(copy); return copy; }
   $$('[data-nav]').forEach(node => node.removeAttribute('data-nav'));
   const uploadInput = replace('uploadInput'); const uploadButton = replace('uploadBtn'); const folderButton = replace('newFolderBtn'); const search = replace('searchInput'); const sortSelect = replace('sortSelect');
-  folderButton?.addEventListener('click', async () => { const name = prompt('New folder name:'); if (!name) return; const r = await fetch('/api/v1/folders', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:current, name})}); if (!r.ok) { const d = await r.json(); toast(d.error || 'The folder could not be created'); return; } await refresh(); }); search?.addEventListener('input', e => { query = e.target.value.trim(); render(); }); sortSelect?.addEventListener('change', e => { sort = e.target.value; render(); }); $('#listBtn').onclick = () => { view = 'list'; render(); }; $('#gridBtn').onclick = () => { view = 'grid'; render(); };
+  folderButton?.addEventListener('click', async () => { const name = prompt('New folder name:'); if (!name) return; const r = await fetch('/api/v1/folders', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:current, name})}); if (!r.ok) { const d = await r.json(); toast(d.error || 'The folder could not be created'); return; } await refresh(); }); search?.addEventListener('input', e => { activeTag = ''; query = e.target.value.trim(); render(); }); sortSelect?.addEventListener('change', e => { sort = e.target.value; render(); }); $('#listBtn').onclick = () => { view = 'list'; render(); }; $('#gridBtn').onclick = () => { view = 'grid'; render(); };
   document.addEventListener('change', e => { if (e.target?.id === 'uploadInput') { const files = [...e.target.files]; upload(files).catch(err => toast(err.message)); e.target.value = ''; } });
   $('#menuBtn')?.addEventListener('click', () => { $('#sidebar').classList.toggle('open'); $('#mobileShade').classList.toggle('open'); }); $('#mobileShade')?.addEventListener('click', () => { $('#sidebar').classList.remove('open'); $('#mobileShade').classList.remove('open'); });
   document.addEventListener('click', async e => { const toggle = e.target.closest('[data-tree-toggle]'); if (toggle) { e.preventDefault(); e.stopPropagation(); const path = toggle.dataset.treeToggle; if (expandedFolders.has(path)) expandedFolders.delete(path); else expandedFolders.add(path); renderNav(); return; } const folder = e.target.closest('[data-real-folder]'); if (folder) { current = folder.dataset.realFolder; query = ''; if (search) search.value = ''; render(); return; } const crumb = e.target.closest('[data-real-path]'); if (crumb) { current = crumb.dataset.realPath; query = ''; if (search) search.value = ''; render(); return; } if (e.target.closest('[data-real-home]')) { current = ''; query = ''; if (search) search.value = ''; render(); return; } const tag = e.target.closest('[data-real-tag]'); if (tag) { query = tag.dataset.realTag; if (search) search.value = query; render(); return; } const open = e.target.closest('[data-real-open]'); if (open) { const x = items.find(i => i.path === open.dataset.realOpen); if (x?.is_dir) { current = x.path; render(); } else window.open('/media/' + encodeURI(x.path), '_blank'); return; } const tags = e.target.closest('[data-real-tags]'); if (tags) { const x = items.find(i => i.path === tags.dataset.realTags); const value = prompt('Keywords, separated by commas:', x?.keywords || ''); if (value !== null) { try { await update(tags.dataset.realTags, {keywords:value}); } catch (err) { toast(err.message); } } return; } const menu = e.target.closest('[data-real-menu]'); if (menu) { const x = items.find(i => i.path === menu.dataset.realMenu); if (!x) return; const action = prompt('Action: enter "keywords", "rename", or "delete"', 'keywords'); if (action === 'keywords') { const value = prompt('Keywords:', x.keywords || ''); if (value !== null) await update(x.path, {keywords:value}); } else if (action === 'rename') { const name = prompt('New name:', x.name); if (name) await update(x.path, {new_path: parentOf(x.path) ? parentOf(x.path) + '/' + name : name}); } else if (action === 'delete') await remove(x.path); } });
@@ -363,10 +364,12 @@ render();
     input.focus();
   }
   document.addEventListener('click', e => { const tags = e.target.closest('[data-real-tags]'); if (!tags) return; e.preventDefault(); e.stopPropagation(); openKeywordEditor(tags.dataset.realTags); }, true);
+  document.addEventListener('click', e => { const tag = e.target.closest('[data-real-tag]'); if (!tag) return; e.preventDefault(); e.stopPropagation(); activeTag = tag.dataset.realTag; query = ''; if (search) search.value = ''; render(); }, true);
   $$('[data-filter]').forEach(node => node.classList.toggle('active', node.dataset.filter === filter));
   document.addEventListener('click', e => {
     const filterButton = e.target.closest('[data-filter]');
     if (!filterButton) return;
+    activeTag = '';
     filter = filterButton.dataset.filter;
     $$('[data-filter]').forEach(node => node.classList.toggle('active', node.dataset.filter === filter));
     render();

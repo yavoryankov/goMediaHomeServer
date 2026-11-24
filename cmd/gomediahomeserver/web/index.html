@@ -287,7 +287,7 @@ render();
     const dropdown = document.createElement('div');
     dropdown.className = 'api-action-dropdown';
     dropdown.style.cssText = 'position:fixed;z-index:100;width:190px;padding:7px;background:#fff;border:1px solid #dce8e7;border-radius:11px;box-shadow:0 12px 30px #082e3230';
-    dropdown.innerHTML = `<div style="padding:7px 9px 8px;color:#71848b;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(item.name)}</div><button data-api-action="rename" style="display:block;width:100%;border:0;border-radius:7px;background:transparent;color:#286f69;padding:9px;text-align:left;font-weight:650;cursor:pointer">Rename</button><button data-api-action="delete" style="display:block;width:100%;border:0;border-radius:7px;background:transparent;color:#b13d4f;padding:9px;text-align:left;font-weight:650;cursor:pointer">Delete</button>`;
+    dropdown.innerHTML = `<div style="padding:7px 9px 8px;color:#71848b;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(item.name)}</div><button data-api-action="move" style="display:block;width:100%;border:0;border-radius:7px;background:transparent;color:#286f69;padding:9px;text-align:left;font-weight:650;cursor:pointer">Move</button><button data-api-action="rename" style="display:block;width:100%;border:0;border-radius:7px;background:transparent;color:#286f69;padding:9px;text-align:left;font-weight:650;cursor:pointer">Rename</button><button data-api-action="delete" style="display:block;width:100%;border:0;border-radius:7px;background:transparent;color:#b13d4f;padding:9px;text-align:left;font-weight:650;cursor:pointer">Delete</button>`;
     document.body.appendChild(dropdown);
     const rect = anchor.getBoundingClientRect();
     const left = Math.min(Math.max(8, rect.right - 190), window.innerWidth - 198);
@@ -303,12 +303,41 @@ render();
       if (!button) return;
       const action = button.dataset.apiAction;
       dropdown.remove();
-      if (action === 'keywords') { const value = prompt('Keywords:', item.keywords || ''); if (value !== null) await update(path, {keywords:value}); }
+      if (action === 'move') openMoveEditor(path);
       else if (action === 'rename') { const name = prompt('New name:', item.name); if (name) await update(path, {new_path: parentOf(path) ? parentOf(path) + '/' + name : name}); }
       else if (action === 'delete') await remove(path);
     });
   }
   document.addEventListener('click', e => { const menu = e.target.closest('[data-real-menu]'); if (!menu) return; e.preventDefault(); e.stopPropagation(); openActionMenu(menu.dataset.realMenu, menu); }, true);
+  function openMoveEditor(path) {
+    document.querySelector('.move-editor-shade')?.remove();
+    const item = items.find(i => i.path === path);
+    if (!item) return;
+    let target = parentOf(path);
+    const folders = items.filter(i => i.is_dir);
+    const children = new Map();
+    folders.forEach(folder => { const parent = parentOf(folder.path); if (!children.has(parent)) children.set(parent, []); children.get(parent).push(folder); });
+    const shade = document.createElement('div');
+    shade.className = 'move-editor-shade';
+    shade.style.cssText = 'position:fixed;inset:0;z-index:101;background:#092e3770;display:flex;align-items:center;justify-content:center;padding:20px';
+    shade.innerHTML = `<div style="width:min(480px,100%);max-height:min(620px,90vh);display:flex;flex-direction:column;background:#fff;border:1px solid #e2ebeb;border-radius:16px;padding:24px;box-shadow:0 22px 60px #082e3240"><h3 style="margin:0 0 6px;color:#192c36;font-size:18px">Move item</h3><p style="margin:0 0 16px;color:#71848b;font-size:12px;overflow-wrap:anywhere">${esc(item.name)}</p><div class="move-editor-tree" style="overflow:auto;border:1px solid #e2ebeb;border-radius:11px;padding:8px;flex:1;min-height:180px"></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px"><button class="move-editor-cancel" style="border:0;border-radius:9px;background:#eef4f4;color:#587177;padding:10px 15px;font-weight:700;cursor:pointer">Cancel</button><button class="move-editor-save" style="border:0;border-radius:9px;background:#0c817b;color:#fff;padding:10px 17px;font-weight:700;cursor:pointer">Move here</button></div></div>`;
+    document.body.appendChild(shade);
+    const tree = shade.querySelector('.move-editor-tree');
+    const renderTree = () => {
+      const node = (folder, depth) => {
+        const blocked = folder.path === path || folder.path.startsWith(path + '/');
+        const chosen = target === folder.path;
+        const nested = (children.get(folder.path) || []).sort((a,b) => a.name.localeCompare(b.name, 'en'));
+        return `<button data-move-target="${esc(folder.path)}" ${blocked ? 'disabled' : ''} style="display:block;width:100%;border:0;border-radius:8px;background:${chosen ? '#e4f6f1' : 'transparent'};color:${blocked ? '#aebabc' : '#29464e'};padding:10px 10px 10px ${10 + depth * 20}px;text-align:left;font-weight:${chosen ? '750' : '600'};cursor:${blocked ? 'not-allowed' : 'pointer'};opacity:${blocked ? '.55' : '1'}">${chosen ? '●' : '○'} &nbsp;${esc(folder.name)}</button>${nested.map(child => node(child, depth + 1)).join('')}`;
+      };
+      tree.innerHTML = (children.get('') || []).sort((a,b) => a.name.localeCompare(b.name, 'en')).map(folder => node(folder, 0)).join('') || '<span style="display:block;padding:16px;color:#9aabad;font-size:12px">No folders available</span>';
+    };
+    renderTree();
+    tree.addEventListener('click', event => { const button = event.target.closest('[data-move-target]'); if (!button || button.disabled) return; target = button.dataset.moveTarget; renderTree(); });
+    shade.querySelector('.move-editor-cancel').addEventListener('click', () => shade.remove());
+    shade.querySelector('.move-editor-save').addEventListener('click', async () => { const name = item.name; const newPath = target ? target + '/' + name : name; if (newPath === path) { toast('The item is already in this folder'); return; } await update(path, {new_path:newPath}); shade.remove(); });
+    shade.addEventListener('click', event => { if (event.target === shade) shade.remove(); });
+  }
   function openKeywordEditor(path) {
     document.querySelector('.keyword-editor-shade')?.remove();
     const item = items.find(i => i.path === path);

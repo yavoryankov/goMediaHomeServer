@@ -64,6 +64,22 @@ The default web interface and API are available at:
 http://127.0.0.1:8095
 ```
 
+## Build ready-to-run server packages
+
+The server can be packaged without requiring end users to install Go. From the
+repository root, run:
+
+```sh
+VERSION=1.0.0 ./scripts/build-release.sh
+```
+
+This creates archives in `dist/` for macOS Intel and Apple Silicon, Linux
+amd64 and arm64, and Windows amd64. Each archive contains the server binary,
+`config.example.json`, the license, and deployment examples. Copy
+`config.example.json` to `config.json`, set the media and database paths, then
+run the included binary. The generated `dist/` directory is intentionally
+ignored by Git; publish these archives as GitHub Release assets.
+
 For an iMac LAN installation, copy `config.imac.example.json` to
 `config.json`, replace `YOUR_USERNAME`, and start the server from the project directory.
 Do not commit the machine-specific `config.imac.json` file.

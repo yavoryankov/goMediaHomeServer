@@ -309,6 +309,29 @@ render();
     });
   }
   document.addEventListener('click', e => { const menu = e.target.closest('[data-real-menu]'); if (!menu) return; e.preventDefault(); e.stopPropagation(); openActionMenu(menu.dataset.realMenu, menu); }, true);
+  function openKeywordEditor(path) {
+    document.querySelector('.keyword-editor-shade')?.remove();
+    const item = items.find(i => i.path === path);
+    if (!item) return;
+    let keywords = tagsOf(item);
+    const shade = document.createElement('div');
+    shade.className = 'keyword-editor-shade';
+    shade.style.cssText = 'position:fixed;inset:0;z-index:101;background:#092e3770;display:flex;align-items:center;justify-content:center;padding:20px';
+    shade.innerHTML = `<div style="width:min(440px,100%);background:#fff;border:1px solid #e2ebeb;border-radius:16px;padding:24px;box-shadow:0 22px 60px #082e3240"><h3 style="margin:0 0 6px;color:#192c36;font-size:18px">Keywords</h3><p style="margin:0 0 18px;color:#71848b;font-size:12px;overflow-wrap:anywhere">${esc(item.name)}</p><div class="keyword-editor-list" style="display:flex;flex-wrap:wrap;gap:7px;min-height:34px;margin-bottom:16px"></div><div style="display:flex;gap:8px"><input class="keyword-editor-input" style="flex:1;min-width:0;border:1px solid #dce8e7;border-radius:9px;padding:11px 12px;outline:0;color:#192c36" placeholder="Add keyword"><button class="keyword-editor-add" style="border:0;border-radius:9px;background:#e7f6f2;color:#286f69;padding:0 14px;font-weight:700;cursor:pointer">Add</button></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:22px"><button class="keyword-editor-cancel" style="border:0;border-radius:9px;background:#eef4f4;color:#587177;padding:10px 15px;font-weight:700;cursor:pointer">Cancel</button><button class="keyword-editor-save" style="border:0;border-radius:9px;background:#0c817b;color:#fff;padding:10px 17px;font-weight:700;cursor:pointer">Save</button></div></div>`;
+    document.body.appendChild(shade);
+    const list = shade.querySelector('.keyword-editor-list');
+    const input = shade.querySelector('.keyword-editor-input');
+    const renderKeywords = () => { list.innerHTML = keywords.length ? keywords.map((tag, index) => `<span style="display:inline-flex;align-items:center;gap:6px;border:1px solid #d7e9e5;border-radius:7px;background:#f1f8f6;color:#397f76;padding:6px 8px;font-size:12px">#${esc(tag)}<button data-remove-keyword="${index}" aria-label="Remove ${esc(tag)}" style="border:0;background:transparent;color:#9aabad;font-size:16px;line-height:12px;padding:0;cursor:pointer">×</button></span>`).join('') : '<span style="color:#9aabad;font-size:12px">No keywords selected</span>'; };
+    renderKeywords();
+    shade.querySelector('.keyword-editor-add').addEventListener('click', () => { const additions = input.value.split(',').map(v => v.trim()).filter(Boolean); additions.forEach(tag => { if (!keywords.some(old => old.toLowerCase() === tag.toLowerCase())) keywords.push(tag); }); input.value = ''; renderKeywords(); input.focus(); });
+    input.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); shade.querySelector('.keyword-editor-add').click(); } });
+    list.addEventListener('click', event => { const remove = event.target.closest('[data-remove-keyword]'); if (!remove) return; keywords.splice(Number(remove.dataset.removeKeyword), 1); renderKeywords(); });
+    shade.querySelector('.keyword-editor-cancel').addEventListener('click', () => shade.remove());
+    shade.querySelector('.keyword-editor-save').addEventListener('click', async () => { await update(path, {keywords: keywords.join(', ')}); shade.remove(); });
+    shade.addEventListener('click', event => { if (event.target === shade) shade.remove(); });
+    input.focus();
+  }
+  document.addEventListener('click', e => { const tags = e.target.closest('[data-real-tags]'); if (!tags) return; e.preventDefault(); e.stopPropagation(); openKeywordEditor(tags.dataset.realTags); }, true);
   $$('[data-filter]').forEach(node => node.classList.toggle('active', node.dataset.filter === filter));
   document.addEventListener('click', e => {
     const filterButton = e.target.closest('[data-filter]');

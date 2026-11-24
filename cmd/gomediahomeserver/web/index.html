@@ -280,27 +280,35 @@ render();
   document.addEventListener('click', async e => { const toggle = e.target.closest('[data-tree-toggle]'); if (toggle) { e.preventDefault(); e.stopPropagation(); const path = toggle.dataset.treeToggle; if (expandedFolders.has(path)) expandedFolders.delete(path); else expandedFolders.add(path); renderNav(); return; } const folder = e.target.closest('[data-real-folder]'); if (folder) { current = folder.dataset.realFolder; query = ''; if (search) search.value = ''; render(); return; } const crumb = e.target.closest('[data-real-path]'); if (crumb) { current = crumb.dataset.realPath; query = ''; if (search) search.value = ''; render(); return; } if (e.target.closest('[data-real-home]')) { current = ''; query = ''; if (search) search.value = ''; render(); return; } const tag = e.target.closest('[data-real-tag]'); if (tag) { query = tag.dataset.realTag; if (search) search.value = query; render(); return; } const open = e.target.closest('[data-real-open]'); if (open) { const x = items.find(i => i.path === open.dataset.realOpen); if (x?.is_dir) { current = x.path; render(); } else window.open('/media/' + encodeURI(x.path), '_blank'); return; } const tags = e.target.closest('[data-real-tags]'); if (tags) { const x = items.find(i => i.path === tags.dataset.realTags); const value = prompt('Keywords, separated by commas:', x?.keywords || ''); if (value !== null) { try { await update(tags.dataset.realTags, {keywords:value}); } catch (err) { toast(err.message); } } return; } const menu = e.target.closest('[data-real-menu]'); if (menu) { const x = items.find(i => i.path === menu.dataset.realMenu); if (!x) return; const action = prompt('Action: enter "keywords", "rename", or "delete"', 'keywords'); if (action === 'keywords') { const value = prompt('Keywords:', x.keywords || ''); if (value !== null) await update(x.path, {keywords:value}); } else if (action === 'rename') { const name = prompt('New name:', x.name); if (name) await update(x.path, {new_path: parentOf(x.path) ? parentOf(x.path) + '/' + name : name}); } else if (action === 'delete') await remove(x.path); } });
   const main = $('.main'); main?.addEventListener('dragover', e => { if (e.dataTransfer?.types?.includes('Files')) e.preventDefault(); }); main?.addEventListener('drop', e => { if (e.dataTransfer?.files?.length) { e.preventDefault(); upload([...e.dataTransfer.files]); } });
   $('#footerResult').nextElementSibling.textContent = 'Connected to the Go API · Local LAN installation';
-  function openActionMenu(path) {
-    document.querySelector('.api-action-shade')?.remove();
+  function openActionMenu(path, anchor) {
+    document.querySelector('.api-action-dropdown')?.remove();
     const item = items.find(i => i.path === path);
     if (!item) return;
-    const shade = document.createElement('div');
-    shade.className = 'api-action-shade';
-    shade.style.cssText = 'position:fixed;inset:0;z-index:100;background:#092e3770;display:flex;align-items:center;justify-content:center;padding:20px';
-    shade.innerHTML = `<div style="width:min(360px,100%);background:#fff;border:1px solid #e2ebeb;border-radius:16px;padding:22px;box-shadow:0 22px 60px #082e3240"><h3 style="margin:0 0 6px;color:#192c36;font-size:17px">File actions</h3><p style="margin:0 0 18px;color:#71848b;font-size:12px;overflow-wrap:anywhere">${esc(item.name)}</p><div style="display:grid;gap:9px"><button data-api-action="keywords" style="border:1px solid #dce8e7;border-radius:10px;background:#f7fbfa;color:#286f69;padding:12px;text-align:left;font-weight:700;cursor:pointer">Edit keywords</button><button data-api-action="rename" style="border:1px solid #dce8e7;border-radius:10px;background:#f7fbfa;color:#286f69;padding:12px;text-align:left;font-weight:700;cursor:pointer">Rename</button><button data-api-action="delete" style="border:1px solid #f2d0d6;border-radius:10px;background:#fff3f4;color:#b13d4f;padding:12px;text-align:left;font-weight:700;cursor:pointer">Delete</button><button data-api-action="cancel" style="border:0;border-radius:10px;background:#eef4f4;color:#587177;padding:12px;font-weight:700;cursor:pointer">Cancel</button></div></div>`;
-    document.body.appendChild(shade);
-    shade.addEventListener('click', async event => {
-      if (event.target === shade) { shade.remove(); return; }
+    const dropdown = document.createElement('div');
+    dropdown.className = 'api-action-dropdown';
+    dropdown.style.cssText = 'position:fixed;z-index:100;width:190px;padding:7px;background:#fff;border:1px solid #dce8e7;border-radius:11px;box-shadow:0 12px 30px #082e3230';
+    dropdown.innerHTML = `<div style="padding:7px 9px 8px;color:#71848b;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(item.name)}</div><button data-api-action="keywords" style="display:block;width:100%;border:0;border-radius:7px;background:transparent;color:#286f69;padding:9px;text-align:left;font-weight:650;cursor:pointer">Edit keywords</button><button data-api-action="rename" style="display:block;width:100%;border:0;border-radius:7px;background:transparent;color:#286f69;padding:9px;text-align:left;font-weight:650;cursor:pointer">Rename</button><button data-api-action="delete" style="display:block;width:100%;border:0;border-radius:7px;background:transparent;color:#b13d4f;padding:9px;text-align:left;font-weight:650;cursor:pointer">Delete</button>`;
+    document.body.appendChild(dropdown);
+    const rect = anchor.getBoundingClientRect();
+    const left = Math.min(Math.max(8, rect.right - 190), window.innerWidth - 198);
+    const top = Math.min(rect.bottom + 6, window.innerHeight - dropdown.offsetHeight - 8);
+    dropdown.style.left = `${left}px`;
+    dropdown.style.top = `${Math.max(8, top)}px`;
+    const close = event => {
+      if (!dropdown.contains(event.target) && event.target !== anchor) dropdown.remove();
+    };
+    setTimeout(() => document.addEventListener('click', close, {once:true}), 0);
+    dropdown.addEventListener('click', async event => {
       const button = event.target.closest('[data-api-action]');
       if (!button) return;
       const action = button.dataset.apiAction;
-      shade.remove();
+      dropdown.remove();
       if (action === 'keywords') { const value = prompt('Keywords:', item.keywords || ''); if (value !== null) await update(path, {keywords:value}); }
       else if (action === 'rename') { const name = prompt('New name:', item.name); if (name) await update(path, {new_path: parentOf(path) ? parentOf(path) + '/' + name : name}); }
       else if (action === 'delete') await remove(path);
     });
   }
-  document.addEventListener('click', e => { const menu = e.target.closest('[data-real-menu]'); if (!menu) return; e.preventDefault(); e.stopPropagation(); openActionMenu(menu.dataset.realMenu); }, true);
+  document.addEventListener('click', e => { const menu = e.target.closest('[data-real-menu]'); if (!menu) return; e.preventDefault(); e.stopPropagation(); openActionMenu(menu.dataset.realMenu, menu); }, true);
   $$('[data-filter]').forEach(node => node.classList.toggle('active', node.dataset.filter === filter));
   document.addEventListener('click', e => {
     const filterButton = e.target.closest('[data-filter]');

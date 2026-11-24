@@ -30,7 +30,9 @@ jobs:
 
   ios:
     name: iOS
-    runs-on: macos-latest
+    # The project uses the Xcode 27 project format (project.xcproj).
+    # macos-latest currently defaults to Xcode 26.6 and expects project.pbxproj.
+    runs-on: xcode-27
     steps:
       - uses: actions/checkout@v4
       - name: Build iOS simulator target

@@ -374,6 +374,9 @@ render();
     $$('[data-filter]').forEach(node => node.classList.toggle('active', node.dataset.filter === filter));
     render();
   });
+  document.addEventListener('click', e => { const clear = e.target.closest('[data-clear-real-tag]'); if (!clear) return; e.preventDefault(); e.stopPropagation(); activeTag = ''; render(); }, true);
+  const emptyObserver = new MutationObserver(() => { const empty = $('#listing .empty'); if (!empty || !activeTag || empty.querySelector('.active-keyword-filter')) return; const note = document.createElement('div'); note.className = 'active-keyword-filter'; note.style.cssText = 'display:inline-flex;align-items:center;gap:8px;margin:8px 0 14px;padding:7px 10px;border:1px solid #d7e9e5;border-radius:8px;background:#f1f8f6;color:#397f76;font-size:12px;font-weight:650'; note.innerHTML = `Active keyword: #${esc(activeTag)} <button data-clear-real-tag style="border:0;background:transparent;color:#8aa3a5;font-size:17px;line-height:12px;padding:0;cursor:pointer" aria-label="Clear keyword filter">×</button>`; empty.insertBefore(note, empty.querySelector('p')); });
+  emptyObserver.observe($('#listing'), {childList:true});
   refresh();
 })();
 </script>

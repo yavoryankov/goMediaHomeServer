@@ -280,6 +280,14 @@ render();
   document.addEventListener('click', async e => { const toggle = e.target.closest('[data-tree-toggle]'); if (toggle) { e.preventDefault(); e.stopPropagation(); const path = toggle.dataset.treeToggle; if (expandedFolders.has(path)) expandedFolders.delete(path); else expandedFolders.add(path); renderNav(); return; } const folder = e.target.closest('[data-real-folder]'); if (folder) { current = folder.dataset.realFolder; query = ''; if (search) search.value = ''; render(); return; } const crumb = e.target.closest('[data-real-path]'); if (crumb) { current = crumb.dataset.realPath; query = ''; if (search) search.value = ''; render(); return; } if (e.target.closest('[data-real-home]')) { current = ''; query = ''; if (search) search.value = ''; render(); return; } const tag = e.target.closest('[data-real-tag]'); if (tag) { query = tag.dataset.realTag; if (search) search.value = query; render(); return; } const open = e.target.closest('[data-real-open]'); if (open) { const x = items.find(i => i.path === open.dataset.realOpen); if (x?.is_dir) { current = x.path; render(); } else window.open('/media/' + encodeURI(x.path), '_blank'); return; } const tags = e.target.closest('[data-real-tags]'); if (tags) { const x = items.find(i => i.path === tags.dataset.realTags); const value = prompt('Keywords, separated by commas:', x?.keywords || ''); if (value !== null) { try { await update(tags.dataset.realTags, {keywords:value}); } catch (err) { toast(err.message); } } return; } const menu = e.target.closest('[data-real-menu]'); if (menu) { const x = items.find(i => i.path === menu.dataset.realMenu); if (!x) return; const action = prompt('Action: enter "keywords", "rename", or "delete"', 'keywords'); if (action === 'keywords') { const value = prompt('Keywords:', x.keywords || ''); if (value !== null) await update(x.path, {keywords:value}); } else if (action === 'rename') { const name = prompt('New name:', x.name); if (name) await update(x.path, {new_path: parentOf(x.path) ? parentOf(x.path) + '/' + name : name}); } else if (action === 'delete') await remove(x.path); } });
   const main = $('.main'); main?.addEventListener('dragover', e => { if (e.dataTransfer?.types?.includes('Files')) e.preventDefault(); }); main?.addEventListener('drop', e => { if (e.dataTransfer?.files?.length) { e.preventDefault(); upload([...e.dataTransfer.files]); } });
   $('#footerResult').nextElementSibling.textContent = 'Connected to the Go API · Local LAN installation';
+  $$('[data-filter]').forEach(node => node.classList.toggle('active', node.dataset.filter === filter));
+  document.addEventListener('click', e => {
+    const filterButton = e.target.closest('[data-filter]');
+    if (!filterButton) return;
+    filter = filterButton.dataset.filter;
+    $$('[data-filter]').forEach(node => node.classList.toggle('active', node.dataset.filter === filter));
+    render();
+  });
   refresh();
 })();
 </script>

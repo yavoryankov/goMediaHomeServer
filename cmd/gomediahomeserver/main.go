@@ -506,7 +506,8 @@ func (a *App) upload(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) rename(w http.ResponseWriter, r *http.Request) {
 	var in struct {
-		Path, NewPath string
+		Path    string `json:"path"`
+		NewPath string `json:"new_path"`
 		Keywords      *string `json:"keywords"`
 	}
 	if !decodeJSON(w, r, &in) {

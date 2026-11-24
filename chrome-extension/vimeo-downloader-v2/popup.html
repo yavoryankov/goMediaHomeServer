@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Media Downloader</title>
+  <style>
+    :root{color-scheme:dark}*{box-sizing:border-box}body{width:360px;margin:0;padding:16px;background:#151620;color:#f5f5fb;font:14px/1.4 system-ui,sans-serif}h1{font-size:19px;margin:0 0 8px}p,.hint{color:#b9bdca;font-size:12px}label{display:block;margin:12px 0 5px;color:#c7cada;font-weight:650}input,select,button{width:100%;padding:10px;border-radius:8px;font:inherit}input,select{background:#0e1017;color:#fff;border:1px solid #454a62}button{border:0;background:#ff4d00;color:#fff;font-weight:750;cursor:pointer;margin-top:12px}button.secondary{background:#34384c}button:disabled{opacity:.55;cursor:wait}.status{min-height:20px;margin-top:12px;white-space:pre-wrap;overflow-wrap:anywhere}.status.error{color:#ff9b9b}.status.ok{color:#86efac}.url{padding:8px;border-radius:7px;background:#202333;color:#9edcff;overflow-wrap:anywhere;font-size:12px}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.check{display:flex;gap:8px;align-items:center;margin-top:12px}.check input{width:auto}.folder-picker{border:1px solid #454a62;border-radius:8px;background:#0e1017;overflow:hidden}.folder-selected{padding:8px 10px;color:#9edcff;border-bottom:1px solid #303449;overflow-wrap:anywhere;font-size:12px}.folder-tree{max-height:180px;overflow:auto;padding:4px}.folder-node{margin:1px 0}.folder-row{display:flex;align-items:center;gap:4px;min-width:0;padding:4px 5px;border-radius:6px;cursor:pointer}.folder-row:hover,.folder-row.selected{background:#282d42}.folder-toggle{width:22px;margin:0;padding:0;background:transparent;color:#b9bdca;font-size:14px}.folder-toggle.empty{visibility:hidden}.folder-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f5f5fb}.folder-children{margin-left:18px}.folder-state{padding:8px;color:#9298ad;font-size:12px}.server-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}.server-row button{width:auto;white-space:nowrap;margin:0;padding:10px 12px}.server-status{font-size:12px;margin-top:6px;min-height:17px}.server-status.ok{color:#86efac}.server-status.error{color:#ff8d8d}
+  </style>
+</head>
+<body>
+  <h1>Media Downloader</h1>
+  <p>Downloads permitted YouTube and Vimeo media through the local downloader service.</p>
+  <button id="detect" class="secondary">Detect video in current tab</button>
+  <label id="detectedLabel">Detected media URL</label>
+  <div id="player" class="url">Not detected yet.</div>
+  <label for="format">Format</label>
+  <select id="format"><option value="video">Video up to 1080p (MP4)</option><option value="audio">Audio only (MP3)</option><option value="subtitles">Subtitles only (SRT)</option></select>
+  <div class="row">
+    <div><label>Destination folder</label><div class="folder-picker"><div id="folderSelected" class="folder-selected">Loading folders…</div><div id="folderTree" class="folder-tree"></div></div><input id="output" type="hidden"></div>
+    <div><label for="name">Name (optional)</label><input id="name" placeholder="Use video title"></div>
+  </div>
+  <label class="check"><input id="useCookies" type="checkbox" checked> Use the current Chrome session</label>
+  <button id="download" disabled>Download to media server folder</button>
+  <label for="serverApi">Media server API address</label>
+  <div class="server-row"><input id="serverApi" type="url" placeholder="http://YOUR-IMAC-IP:8095/api/v1"><button id="testServer" class="secondary" type="button">Test</button></div>
+  <div id="serverStatus" class="server-status">Not tested yet.</div>
+  <button id="record" class="secondary">Start recording</button>
+  <div id="status" class="status"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

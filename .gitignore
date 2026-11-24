@@ -1,0 +1,20 @@
+bin/
+data/
+config.json
+config.imac.json
+*.db
+*.sqlite
+*.log
+.DS_Store
+__pycache__/
+
+# IDE and local machine state
+**/xcuserdata/
+*.xcuserstate
+*.mobileprovision
+.idea/workspace.xml
+.idea/usage.statistics.xml
+
+# Local archives and generated packages
+*.zip
+chrome-extension/**/bridge.local.env

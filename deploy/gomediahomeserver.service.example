@@ -1,0 +1,15 @@
+[Unit]
+Description=goMediaHomeServer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gomedia
+WorkingDirectory=/opt/gomediahomeserver
+ExecStart=/opt/gomediahomeserver/bin/gomediahomeserver
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

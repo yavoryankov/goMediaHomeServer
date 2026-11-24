@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>goMediaHomeServer Downloader Settings</title>
+  <style>
+    :root{color-scheme:light}*{box-sizing:border-box}body{max-width:720px;margin:0 auto;padding:32px;background:#f4f7f8;color:#18313b;font:15px/1.5 system-ui,sans-serif}main{background:#fff;border:1px solid #dbe6e8;border-radius:18px;padding:28px;box-shadow:0 10px 30px #18313b12}h1{margin:0 0 8px;font-size:26px}p{color:#6d838a}label{display:block;margin:20px 0 7px;font-weight:700}input{width:100%;padding:12px 14px;border:1px solid #cbdadd;border-radius:10px;font:inherit}button{margin-top:24px;padding:12px 18px;border:0;border-radius:10px;background:#0b8f88;color:#fff;font:inherit;font-weight:700;cursor:pointer}.status{margin-top:14px;color:#0b8f88}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Downloader settings</h1>
+    <p>Choose the media server API and the library folder used for downloaded videos.</p>
+    <label for="server">Media server API URL</label>
+    <input id="server" type="url" placeholder="http://YOUR-IMAC-IP:8095/api/v1">
+    <label for="path">Destination folder inside the media library</label>
+    <input id="path" type="text" placeholder="Yavor/Courses/Arestovich">
+    <label for="downloader">Local download bridge URL</label>
+    <input id="downloader" type="url" placeholder="http://127.0.0.1:7071">
+    <label for="recorder">Local recorder service URL</label>
+    <input id="recorder" type="url" placeholder="http://127.0.0.1:7071">
+    <button id="save">Save settings</button>
+    <div id="status" class="status"></div>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

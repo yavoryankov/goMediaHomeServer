@@ -159,7 +159,9 @@ tail -f data/server.stdout.log
 ```
 
 The service runs as the logged-in user, which keeps access to a user-owned media
-folder simple. It starts after login and restarts after an unexpected exit.
+folder simple. It starts after login, restarts after an unexpected exit, and
+uses macOS `caffeinate` to keep the Mac and its network awake while the server
+is running. The display may still be turned off independently.
 
 ### Linux systemd service
 

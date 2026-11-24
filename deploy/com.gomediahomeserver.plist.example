@@ -6,6 +6,8 @@
   <string>com.gomediahomeserver</string>
   <key>ProgramArguments</key>
   <array>
+    <string>/usr/bin/caffeinate</string>
+    <string>-dimsu</string>
     <string>/Users/YOUR_USERNAME/Yavor/goMediaHomeServer/gomediahomeserver</string>
   </array>
   <key>WorkingDirectory</key>

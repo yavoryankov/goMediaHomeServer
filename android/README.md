@@ -5,7 +5,7 @@ This directory contains the Android client for goMediaHomeServer.
 ## Requirements
 
 - Android Studio with the Android SDK and an emulator or Android device.
-- JDK 21 or newer supported by the installed Android Gradle Plugin.
+- ARM64 JDK 21 or newer on Apple Silicon, or an x86_64 JDK 21 or newer on Intel/Windows/Linux.
 - Android SDK platform/build tools required by the project.
 - A phone and the iMac/server connected to the same LAN for local testing.
 
@@ -31,6 +31,19 @@ The value is stored locally in Android preferences. Replace the address when the
 server is installed on another network.
 
 ## Build from the command line
+
+On Apple Silicon, make sure Gradle is using an ARM64 JDK. An Intel-only JDK
+will fail with `Bad CPU type in executable` before Gradle can start:
+
+```sh
+/usr/libexec/java_home -v 21
+export JAVA_HOME=$(/usr/libexec/java_home -v 21)
+java -version
+```
+
+If JDK 21 is not installed, install an ARM64 JDK 21 distribution such as
+Temurin, then repeat the commands above. GitHub Actions uses Java 21 for the
+reproducible CI build.
 
 From the repository root:
 

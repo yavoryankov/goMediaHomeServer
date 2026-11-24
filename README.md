@@ -24,7 +24,7 @@ Personal media server for a local LAN library. The project provides a Go backend
 2. Clone the repository and enter the project directory:
 
 ```sh
-git clone <YOUR-GITHUB-REPOSITORY-URL> goMediaHomeServer
+git clone https://github.com/yavoryankov/goMediaHomeServer.git goMediaHomeServer
 cd goMediaHomeServer
 ```
 
@@ -107,9 +107,22 @@ config.example.json      Example server configuration
 config.imac.example.json  Example LAN configuration for an iMac server
 ```
 
+## LAN-only security boundary
+
+This project is designed for a trusted private LAN. The server currently has no
+authentication, authorization, TLS, or Internet-facing hardening. Do not expose
+port `8095` through port forwarding, a public reverse proxy, or an untrusted
+network. Bind to `127.0.0.1` for local-only use, or to `0.0.0.0` only when the
+machine firewall restricts port `8095` to the private LAN.
+
+The iOS app, Android app, and Chrome extension must use the server's LAN address
+when connecting from another device. They do not provide an authentication layer.
+
 ## Development status
 
-This project is intended for local development and private LAN use. Authentication, user accounts, and production service management should be added before exposing the server outside the trusted network.
+This project is intended for local development and private LAN use. Authentication,
+user accounts, TLS, and additional production hardening are required before any
+deployment outside the trusted network.
 
 ## Client configuration
 

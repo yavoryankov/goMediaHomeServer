@@ -28,6 +28,21 @@ jobs:
       - run: ./gradlew --no-daemon :app:assembleDebug
         working-directory: android
 
+  ios:
+    name: iOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build iOS simulator target
+        run: >-
+          xcodebuild
+          -project "ios/goMediaHomеClient/goMediaHomеClient.xcodeproj"
+          -scheme "goMediaHomеClient"
+          -sdk iphonesimulator
+          -configuration Debug
+          -derivedDataPath "$RUNNER_TEMP/goMediaHomeServer-ios-derived"
+          CODE_SIGNING_ALLOWED=NO build
+
   chrome-extension:
     name: Chrome extension
     runs-on: ubuntu-latest

@@ -2,6 +2,6 @@
 
 ## Maintainer
 
-- **Yavor Yankov** — [yavor.yankov@gmail.com](mailto:yavor.yankov@gmail.com)
+- **Yavor Yankov** — [GitHub profile](https://github.com/yavoryankov)
 
 This project is maintained by Yavor Yankov.

@@ -365,6 +365,7 @@ render();
   }
   document.addEventListener('click', e => { const tags = e.target.closest('[data-real-tags]'); if (!tags) return; e.preventDefault(); e.stopPropagation(); openKeywordEditor(tags.dataset.realTags); }, true);
   document.addEventListener('click', e => { const tag = e.target.closest('[data-real-tag]'); if (!tag) return; e.preventDefault(); e.stopPropagation(); activeTag = tag.dataset.realTag; query = ''; if (search) search.value = ''; render(); }, true);
+  document.addEventListener('click', e => { const open = e.target.closest('[data-real-open]'); if (!open) return; const item = items.find(x => x.path === open.dataset.realOpen); if (!item?.is_dir) return; e.preventDefault(); e.stopPropagation(); current = item.path; query = ''; activeTag = ''; if (search) search.value = ''; render(); }, true);
   $$('[data-filter]').forEach(node => node.classList.toggle('active', node.dataset.filter === filter));
   document.addEventListener('click', e => {
     const filterButton = e.target.closest('[data-filter]');

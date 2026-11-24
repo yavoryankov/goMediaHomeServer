@@ -336,7 +336,7 @@ render();
     renderTree();
     tree.addEventListener('click', event => { const button = event.target.closest('[data-move-target]'); if (!button || button.disabled) return; target = button.dataset.moveTarget; renderTree(); });
     shade.querySelector('.move-editor-cancel').addEventListener('click', () => shade.remove());
-    shade.querySelector('.move-editor-save').addEventListener('click', async () => { const name = item.name; const newPath = target ? target + '/' + name : name; if (newPath === path) { toast('The item is already in this folder'); return; } try { await update(path, {new_path:newPath}); current = target; shade.remove(); render(); toast('Item moved successfully'); } catch (error) { toast(error.message || 'Move failed'); } });
+    shade.querySelector('.move-editor-save').addEventListener('click', async () => { const name = item.name; const newPath = target ? target + '/' + name : name; if (newPath === path) { toast('The item is already in this folder'); return; } try { await update(path, {new_path:newPath}); shade.remove(); render(); toast('Item moved successfully'); } catch (error) { toast(error.message || 'Move failed'); } });
     shade.addEventListener('click', event => { if (event.target === shade) shade.remove(); });
   }
   function openKeywordEditor(path) {

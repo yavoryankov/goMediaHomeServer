@@ -163,6 +163,29 @@ folder simple. It starts after login, restarts after an unexpected exit, and
 uses macOS `caffeinate` to keep the Mac and its network awake while the server
 is running. The display may still be turned off independently.
 
+#### macOS sleep and LAN access
+
+macOS may put the computer and its network interface to sleep when the display
+is off. In that state the server process can still appear as `running`, while
+LAN clients receive a timeout. Always install the server with
+`deploy/install-macos-launchd.sh`; the generated LaunchAgent starts the server
+through `caffeinate -dimsu` and prevents this failure mode without keeping the
+display on.
+
+Verify the service and API after installation:
+
+```sh
+launchctl print "gui/$(id -u)/com.gomediahomeserver"
+curl http://127.0.0.1:8095/api/v1/health
+```
+
+The health response should contain `"status":"ok"`. From another device on
+the same LAN, replace `127.0.0.1` with the server's LAN address. If a client
+still receives a timeout, verify that it is on the same LAN, that VPN or proxy
+software is disabled for local addresses, and that the router does not enable
+AP/client isolation. Do not fix this by running the binary manually, because a
+manual process is not restarted after a crash or login.
+
 ### Linux systemd service
 
 Run the included installer from the repository root:

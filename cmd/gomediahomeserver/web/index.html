@@ -366,6 +366,32 @@ render();
   document.addEventListener('click', e => { const tags = e.target.closest('[data-real-tags]'); if (!tags) return; e.preventDefault(); e.stopPropagation(); openKeywordEditor(tags.dataset.realTags); }, true);
   document.addEventListener('click', e => { const tag = e.target.closest('[data-real-tag]'); if (!tag) return; e.preventDefault(); e.stopPropagation(); activeTag = tag.dataset.realTag; query = ''; if (search) search.value = ''; render(); }, true);
   document.addEventListener('click', e => { const open = e.target.closest('[data-real-open]'); if (!open) return; const item = items.find(x => x.path === open.dataset.realOpen); if (!item?.is_dir) return; e.preventDefault(); e.stopPropagation(); current = item.path; query = ''; activeTag = ''; if (search) search.value = ''; render(); }, true);
+  function openCreateFolderEditor() {
+    document.querySelector('.create-folder-shade')?.remove();
+    let target = current;
+    const folders = items.filter(i => i.is_dir);
+    const children = new Map();
+    folders.forEach(folder => { const parent = parentOf(folder.path); if (!children.has(parent)) children.set(parent, []); children.get(parent).push(folder); });
+    const shade = document.createElement('div');
+    shade.className = 'create-folder-shade';
+    shade.style.cssText = 'position:fixed;inset:0;z-index:101;background:#092e3770;display:flex;align-items:center;justify-content:center;padding:20px';
+    shade.innerHTML = `<div style="width:min(480px,100%);max-height:min(680px,90vh);display:flex;flex-direction:column;background:#fff;border:1px solid #e2ebeb;border-radius:16px;padding:24px;box-shadow:0 22px 60px #082e3240"><h3 style="margin:0 0 6px;color:#192c36;font-size:18px">New folder</h3><p style="margin:0 0 14px;color:#71848b;font-size:12px">Choose where the new folder will be created.</p><label style="display:block;margin-bottom:7px;color:#59737a;font-size:11px;font-weight:700">Folder name</label><input class="create-folder-name" style="border:1px solid #dce8e7;border-radius:9px;padding:11px 12px;outline:0;color:#192c36;margin-bottom:16px" placeholder="Folder name"><label style="display:block;margin-bottom:7px;color:#59737a;font-size:11px;font-weight:700">Create in</label><div class="create-folder-location" style="padding:10px 12px;border:1px solid #cbe8e0;border-radius:9px;background:#f1f8f6;color:#286f69;font-size:12px;font-weight:700;overflow-wrap:anywhere;margin-bottom:10px"></div><div class="create-folder-tree" style="overflow:auto;border:1px solid #e2ebeb;border-radius:11px;padding:8px;flex:1;min-height:150px"></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px"><button class="create-folder-cancel" style="border:0;border-radius:9px;background:#eef4f4;color:#587177;padding:10px 15px;font-weight:700;cursor:pointer">Cancel</button><button class="create-folder-save" style="border:0;border-radius:9px;background:#0c817b;color:#fff;padding:10px 17px;font-weight:700;cursor:pointer">Create folder</button></div></div>`;
+    document.body.appendChild(shade);
+    const tree = shade.querySelector('.create-folder-tree');
+    const location = shade.querySelector('.create-folder-location');
+    const renderTree = () => {
+      location.textContent = target ? '/' + target : 'Library root';
+      const node = (folder, depth) => { const chosen = target === folder.path; const nested = (children.get(folder.path) || []).sort((a,b) => a.name.localeCompare(b.name, 'en')); return `<button data-create-target="${esc(folder.path)}" style="display:block;width:100%;border:0;border-radius:8px;background:${chosen ? '#e4f6f1' : 'transparent'};color:#29464e;padding:10px 10px 10px ${10 + depth * 20}px;text-align:left;font-weight:${chosen ? '750' : '600'};cursor:pointer">${chosen ? '●' : '○'} &nbsp;${esc(folder.name)}</button>${nested.map(child => node(child, depth + 1)).join('')}`; };
+      tree.innerHTML = `<button data-create-target="" style="display:block;width:100%;border:0;border-radius:8px;background:${target === '' ? '#e4f6f1' : 'transparent'};color:#29464e;padding:10px;text-align:left;font-weight:${target === '' ? '750' : '600'};cursor:pointer">${target === '' ? '●' : '○'} &nbsp;Library root</button>` + (children.get('') || []).sort((a,b) => a.name.localeCompare(b.name, 'en')).map(folder => node(folder, 0)).join('');
+    };
+    renderTree();
+    tree.addEventListener('click', event => { const button = event.target.closest('[data-create-target]'); if (!button) return; target = button.dataset.createTarget; renderTree(); });
+    shade.querySelector('.create-folder-cancel').addEventListener('click', () => shade.remove());
+    shade.querySelector('.create-folder-save').addEventListener('click', async () => { const name = shade.querySelector('.create-folder-name').value.trim(); if (!name || name === '.' || name === '..' || /[\\/]/.test(name)) { toast('Enter a valid folder name'); return; } try { const response = await fetch('/api/v1/folders', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:target, name})}); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'The folder could not be created'); shade.remove(); await refresh(); toast('Folder created successfully'); } catch (error) { toast(error.message || 'The folder could not be created'); } });
+    shade.addEventListener('click', event => { if (event.target === shade) shade.remove(); });
+    shade.querySelector('.create-folder-name').focus();
+  }
+  document.addEventListener('click', e => { const button = e.target.closest('#newFolderBtn'); if (!button) return; e.preventDefault(); e.stopPropagation(); openCreateFolderEditor(); }, true);
   $$('[data-filter]').forEach(node => node.classList.toggle('active', node.dataset.filter === filter));
   document.addEventListener('click', e => {
     const filterButton = e.target.closest('[data-filter]');

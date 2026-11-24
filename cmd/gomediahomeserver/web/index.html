@@ -387,9 +387,11 @@ render();
     renderTree();
     tree.addEventListener('click', event => { const button = event.target.closest('[data-create-target]'); if (!button) return; target = button.dataset.createTarget; renderTree(); });
     shade.querySelector('.create-folder-cancel').addEventListener('click', () => shade.remove());
-    shade.querySelector('.create-folder-save').addEventListener('click', async () => { const name = shade.querySelector('.create-folder-name').value.trim(); if (!name || name === '.' || name === '..' || /[\\/]/.test(name)) { toast('Enter a valid folder name'); return; } try { const response = await fetch('/api/v1/folders', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:target, name})}); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'The folder could not be created'); shade.remove(); await refresh(); toast('Folder created successfully'); } catch (error) { toast(error.message || 'The folder could not be created'); } });
+    shade.querySelector('.create-folder-save').addEventListener('click', async () => { const nameInput = shade.querySelector('.create-folder-name'); const name = nameInput.value.trim(); if (!name || name === '.' || name === '..' || /[\\/]/.test(name)) { nameInput.style.borderColor = '#d65c68'; nameInput.style.boxShadow = '0 0 0 3px #d65c6826'; nameInput.focus(); return; } try { const response = await fetch('/api/v1/folders', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:target, name})}); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'The folder could not be created'); shade.remove(); await refresh(); toast('Folder created successfully'); } catch (error) { toast(error.message || 'The folder could not be created'); } });
     shade.addEventListener('click', event => { if (event.target === shade) shade.remove(); });
-    shade.querySelector('.create-folder-name').focus();
+    const nameInput = shade.querySelector('.create-folder-name');
+    nameInput.addEventListener('input', () => { nameInput.style.borderColor = '#dce8e7'; nameInput.style.boxShadow = 'none'; });
+    nameInput.focus();
   }
   document.addEventListener('click', e => { const button = e.target.closest('#newFolderBtn'); if (!button) return; e.preventDefault(); e.stopPropagation(); openCreateFolderEditor(); }, true);
   $$('[data-filter]').forEach(node => node.classList.toggle('active', node.dataset.filter === filter));

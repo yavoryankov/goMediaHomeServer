@@ -250,12 +250,13 @@ render();
   }
   function renderStats() { const files = items.filter(x => !x.is_dir), folders = items.filter(x => x.is_dir), tags = new Set(files.flatMap(tagsOf)); $('#filesCount').textContent = files.length; $('#foldersCount').textContent = folders.length; $('#sizeCount').textContent = bytes(files.reduce((n,x) => n + x.size, 0)); $('#tagsCount').textContent = tags.size; $('#navCount').textContent = files.length; $('#visibleCount').textContent = `${visible().length} ${visible().length === 1 ? 'item' : 'items'}`; }
   const expandedFolders = new Set();
+  let treeInitialized = false;
   function renderNav() {
     const folders = items.filter(x => x.is_dir);
     const children = new Map();
     folders.forEach(x => { const parent = parentOf(x.path); if (!children.has(parent)) children.set(parent, []); children.get(parent).push(x); });
     const roots = children.get('') || [];
-    roots.forEach(x => expandedFolders.add(x.path));
+    if (!treeInitialized) { roots.forEach(x => expandedFolders.add(x.path)); treeInitialized = true; }
     const node = (folder, depth) => {
       const nested = (children.get(folder.path) || []).sort((a,b) => a.name.localeCompare(b.name, 'en'));
       const expanded = expandedFolders.has(folder.path);

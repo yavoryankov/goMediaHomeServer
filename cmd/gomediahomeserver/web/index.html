@@ -330,12 +330,13 @@ render();
         const nested = (children.get(folder.path) || []).sort((a,b) => a.name.localeCompare(b.name, 'en'));
         return `<button data-move-target="${esc(folder.path)}" ${blocked ? 'disabled' : ''} style="display:block;width:100%;border:0;border-radius:8px;background:${chosen ? '#e4f6f1' : 'transparent'};color:${blocked ? '#aebabc' : '#29464e'};padding:10px 10px 10px ${10 + depth * 20}px;text-align:left;font-weight:${chosen ? '750' : '600'};cursor:${blocked ? 'not-allowed' : 'pointer'};opacity:${blocked ? '.55' : '1'}">${chosen ? '●' : '○'} &nbsp;${esc(folder.name)}</button>${nested.map(child => node(child, depth + 1)).join('')}`;
       };
-      tree.innerHTML = (children.get('') || []).sort((a,b) => a.name.localeCompare(b.name, 'en')).map(folder => node(folder, 0)).join('') || '<span style="display:block;padding:16px;color:#9aabad;font-size:12px">No folders available</span>';
+      const rootChosen = target === '';
+      tree.innerHTML = `<button data-move-target="" style="display:block;width:100%;border:0;border-radius:8px;background:${rootChosen ? '#e4f6f1' : 'transparent'};color:#29464e;padding:10px;text-align:left;font-weight:${rootChosen ? '750' : '600'};cursor:pointer">${rootChosen ? '●' : '○'} &nbsp;Library root</button>` + ((children.get('') || []).sort((a,b) => a.name.localeCompare(b.name, 'en')).map(folder => node(folder, 0)).join('') || '<span style="display:block;padding:16px;color:#9aabad;font-size:12px">No folders available</span>');
     };
     renderTree();
     tree.addEventListener('click', event => { const button = event.target.closest('[data-move-target]'); if (!button || button.disabled) return; target = button.dataset.moveTarget; renderTree(); });
     shade.querySelector('.move-editor-cancel').addEventListener('click', () => shade.remove());
-    shade.querySelector('.move-editor-save').addEventListener('click', async () => { const name = item.name; const newPath = target ? target + '/' + name : name; if (newPath === path) { toast('The item is already in this folder'); return; } await update(path, {new_path:newPath}); shade.remove(); });
+    shade.querySelector('.move-editor-save').addEventListener('click', async () => { const name = item.name; const newPath = target ? target + '/' + name : name; if (newPath === path) { toast('The item is already in this folder'); return; } try { await update(path, {new_path:newPath}); current = target; shade.remove(); render(); toast('Item moved successfully'); } catch (error) { toast(error.message || 'Move failed'); } });
     shade.addEventListener('click', event => { if (event.target === shade) shade.remove(); });
   }
   function openKeywordEditor(path) {
